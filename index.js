@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const cors = require("cors")
+// const cors = require("cors")
 const Item = require("./models/item");
 
 app.use(express.json());
@@ -11,6 +11,10 @@ app.use(express.static("dist"));
 //     origin: "http://localhost:5173",
 //   })
 // );
+
+app.get("/", (request, response) => {
+	response.send("<h1>Hello World</h1>")
+})
 
 app.get("/api/items", async (request, response) => {
   try {
@@ -100,6 +104,7 @@ const unknownEndpoint = (request, response) => {
 }
 app.use(unknownEndpoint)
 
-const PORT = process.env.PORT;
-app.listen(process.env.PORT);
-console.log(`Server running on port ${PORT}`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
