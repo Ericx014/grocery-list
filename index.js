@@ -5,11 +5,11 @@ const cors = require("cors")
 const Item = require("./models/item");
 
 app.use(express.json());
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-  })
-);
+// app.use(
+//   cors({
+//     origin: "http://localhost:5173",
+//   })
+// );
 
 app.get("/api/items", async (request, response) => {
   try {
