@@ -1,0 +1,7 @@
+PUT http://localhost:3001/api/items/65b4faf83a57765044cad50b
+Content-Type: application/json
+
+{
+	"title": "Updated Title",
+	"note": "Updated note"
+}
