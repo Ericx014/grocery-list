@@ -3,16 +3,30 @@ const express = require("express");
 const app = express();
 const Item = require("./models/item");
 
-app.use(express.json());
-app.use(express.static("dist"));
-
 const requestLogger = (request, response, next) => {
 	console.log("Method", request.method)
 	console.log("Path", request.path)
 	console.log("Body", request.body)
 	next()
 }
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+	(error.name === "CastError")
+	?	response.status(400).send({error: "malformatted id"})
+	: {}
+
+  next(error);
+};
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({error: "unknown endpoint"});
+};
+
+app.use(express.json());
 app.use(requestLogger)
+app.use(express.static("dist"));
 
 app.get("/", (request, response) => {
 	response.send("<h1>Hello World</h1>")
@@ -28,7 +42,7 @@ app.get("/api/items", async (request, response) => {
   }
 });
 
-app.get("/api/items/:id", async (request, response) => {
+app.get("/api/items/:id", async (request, response, next) => {
   try {
     const id = request.params.id;
     const specificItem = await Item.findById(id);
@@ -39,10 +53,7 @@ app.get("/api/items/:id", async (request, response) => {
     } else {
       response.status(404).json({error: `No item with id of ${id} found`});
     }
-  } catch (error) {
-    console.error("Error", error);
-    response.status(500).json({error: "Internal server error"});
-  }
+  } catch (error) { next(error) }
 });
 
 app.post("/api/items", async (request, response) => {
@@ -58,7 +69,7 @@ app.post("/api/items", async (request, response) => {
   }
 });
 
-app.delete("/api/items/:id", async (request, response) => {
+app.delete("/api/items/:id", async (request, response, next) => {
   try {
     const id = request.params.id;
     const deletedItem = await Item.findByIdAndDelete(id);
@@ -67,13 +78,10 @@ app.delete("/api/items/:id", async (request, response) => {
       ? response.status(204).end
       : response.status(404).json({error: `No item with id of ${id} found`});
 		
-  } catch {
-    console.error("Error:", error);
-    response.status(500).json({error: "Internal server error"});
-  }
+  } catch(error) { next(error)  }
 });
 
-app.put("/api/items/:id", async (request, response) => {
+app.put("/api/items/:id", async (request, response, next) => {
 	try {
 		const id = request.params.id
 		const {title, note} = request.body
@@ -93,16 +101,11 @@ app.put("/api/items/:id", async (request, response) => {
       response.status(404).json({error: `No item with id of ${id} found`});
     }
 
-	} catch {
-		console.error("Error:", error);
-    response.status(500).json({error: "Internal server error"});
-	}
+	} catch (error) { next(error) }
 })
 
-const unknownEndpoint = (request, response) => {
-	response.status(404).send({error: "unknown endpoint"})
-}
 app.use(unknownEndpoint)
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
