@@ -1,16 +1,24 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-// const cors = require("cors")
+const cors = require("cors")
 const Item = require("./models/item");
 
 app.use(express.json());
 app.use(express.static("dist"));
-// app.use(
-//   cors({
-//     origin: "http://localhost:5173",
-//   })
-// );
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
+
+const requestLogger = (request, response, next) => {
+	console.log("Method", request.method)
+	console.log("Path", request.path)
+	console.log("Body", request.body)
+	next()
+}
+app.use(requestLogger)
 
 app.get("/", (request, response) => {
 	response.send("<h1>Hello World</h1>")
@@ -61,12 +69,10 @@ app.delete("/api/items/:id", async (request, response) => {
     const id = request.params.id;
     const deletedItem = await Item.findByIdAndDelete(id);
 
-    if (deletedItem) {
-      response.status(204).end;
-      console.log(`Deleted item with the id of ${id}`);
-    } else {
-      response.status(404).json({error: `No item with id of ${id} found`});
-    }
+		deletedItem
+      ? response.status(204).end
+      : response.status(404).json({error: `No item with id of ${id} found`});
+		
   } catch {
     console.error("Error:", error);
     response.status(500).json({error: "Internal server error"});
