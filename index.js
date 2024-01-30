@@ -1,16 +1,10 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
-const cors = require("cors")
 const Item = require("./models/item");
 
 app.use(express.json());
 app.use(express.static("dist"));
-app.use(
-  cors({
-    origin: "http://localhost:5173",
-  })
-);
 
 const requestLogger = (request, response, next) => {
 	console.log("Method", request.method)
