@@ -1,6 +1,8 @@
-require("dotenv").config();
 const express = require("express");
 const app = express();
+// const app = require("./app")
+const config = require("./utils/config");
+const logger = require("./utils/logger");
 const Item = require("./models/item");
 
 const requestLogger = (request, response, next) => {
@@ -107,7 +109,6 @@ app.put("/api/items/:id", async (request, response, next) => {
 app.use(unknownEndpoint)
 app.use(errorHandler)
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+app.listen(config.PORT, () => {
+  console.log(`Server running on port ${config.PORT}`);
 });
