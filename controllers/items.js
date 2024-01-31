@@ -1,5 +1,6 @@
-const itemsRouter = require("express").Router()
-const Item = require("../models/item")
+const itemsRouter = require("express").Router();
+const Item = require("../models/item");
+const User = require("../models/user");
 
 itemsRouter.get("/", async (request, response) => {
   try {
@@ -29,14 +30,27 @@ itemsRouter.get("/:id", async (request, response, next) => {
 
 itemsRouter.post("/", async (request, response) => {
   try {
-    const {title, note} = request.body;
-    !title ? response.end(204).json({error: "Title missing"}) : {};
-    const newItem = new Item({title, note});
+    const {title, note, user} = request.body;
+    const foundUser = await User.findById(user);
+
+    if(!title) {
+			response.end(204).json({error: "Title missing"}) 
+		}
+		if (!foundUser) {
+      return response.status(404).json({error: "User not found"});
+    }
+    const newItem = new Item({
+      title,
+      note,
+      user: foundUser._id,
+    });
     const savedItem = await newItem.save();
+    foundUser.items = foundUser.items.concat(savedItem._id);
+    await foundUser.save();
     response.status(201).json(savedItem);
-  } catch {
-    console.error("Error:", error);
-    response.status(500).json({error: "Internal server error"});
+  } catch(error) {
+		console.error("Error: ", error);
+		response.status(500).json({error: "Internal server error"});
   }
 });
 
@@ -74,4 +88,4 @@ itemsRouter.put("/:id", async (request, response, next) => {
   }
 });
 
-module.exports = itemsRouter
+module.exports = itemsRouter;
