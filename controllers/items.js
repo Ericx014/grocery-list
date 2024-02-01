@@ -1,6 +1,15 @@
 const itemsRouter = require("express").Router();
 const Item = require("../models/item");
 const User = require("../models/user");
+const jwt = require("jsonwebtoken")
+
+const getTokenFrom = request => {
+	const authorization = request.get("authorization")
+	if (authorization && authorization.startsWith("Bearer ")) {
+		return authorization.replace("Bearer ", "")
+	}
+	return null
+}
 
 itemsRouter.get("/", async (request, response) => {
   try {
@@ -30,8 +39,13 @@ itemsRouter.get("/:id", async (request, response, next) => {
 
 itemsRouter.post("/", async (request, response) => {
   try {
-    const {title, note, user} = request.body;
-    const foundUser = await User.findById(user);
+    const {title, note} = request.body;
+
+		const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+		if (!decodedToken.id) {
+			return response.status(401).json({error: "token invalid"})
+		}
+    const foundUser = await User.findById(decodedToken.id);
 
     if(!title) {
 			response.end(204).json({error: "Title missing"}) 
