@@ -1,19 +1,19 @@
 const itemsRouter = require("express").Router();
 const Item = require("../models/item");
 const User = require("../models/user");
-const jwt = require("jsonwebtoken")
+const jwt = require("jsonwebtoken");
 
-const getTokenFrom = request => {
-	const authorization = request.get("authorization")
-	if (authorization && authorization.startsWith("Bearer ")) {
-		return authorization.replace("Bearer ", "")
-	}
-	return null
-}
+const getTokenFrom = (request) => {
+  const authorization = request.get("authorization");
+  if (authorization && authorization.startsWith("Bearer ")) {
+    return authorization.replace("Bearer ", "");
+  }
+  return null;
+};
 
 itemsRouter.get("/", async (request, response) => {
   try {
-    const items = await Item.find({});
+    const items = await Item.find({}).populate("user");
     response.json(items);
   } catch {
     console.error("Error", error);
@@ -24,7 +24,7 @@ itemsRouter.get("/", async (request, response) => {
 itemsRouter.get("/:id", async (request, response, next) => {
   try {
     const id = request.params.id;
-    const specificItem = await Item.findById(id);
+    const specificItem = await Item.findById(id).populate("user");
 
     if (specificItem) {
       response.json(specificItem);
@@ -41,16 +41,16 @@ itemsRouter.post("/", async (request, response) => {
   try {
     const {title, note} = request.body;
 
-		const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
-		if (!decodedToken.id) {
-			return response.status(401).json({error: "token invalid"})
-		}
+    const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET);
+    if (!decodedToken.id) {
+      return response.status(401).json({error: "token invalid"});
+    }
     const foundUser = await User.findById(decodedToken.id);
 
-    if(!title) {
-			response.end(204).json({error: "Title missing"}) 
-		}
-		if (!foundUser) {
+    if (!title) {
+      response.end(204).json({error: "Title missing"});
+    }
+    if (!foundUser) {
       return response.status(404).json({error: "User not found"});
     }
     const newItem = new Item({
@@ -62,9 +62,9 @@ itemsRouter.post("/", async (request, response) => {
     foundUser.items = foundUser.items.concat(savedItem._id);
     await foundUser.save();
     response.status(201).json(savedItem);
-  } catch(error) {
-		console.error("Error: ", error);
-		response.status(500).json({error: "Internal server error"});
+  } catch (error) {
+    console.error("Error: ", error);
+    response.status(500).json({error: "Internal server error"});
   }
 });
 
