@@ -40,8 +40,6 @@ usersRouter.get("/username/:username", async (request, response) => {
   }
 });
 
-
-
 usersRouter.post("/", async (request, response) => {
   const {username, name, password} = request.body;
 
@@ -58,6 +56,19 @@ usersRouter.post("/", async (request, response) => {
 
   response.status(201).json(savedUser);
   console.log(savedUser);
+});
+
+usersRouter.delete("/:id", async (request, response, next) => {
+  try {
+    const id = request.params.id;
+    const deletedItem = await User.findByIdAndDelete(id);
+
+    deletedItem
+      ? response.status(204).end
+      : response.status(404).json({error: `No user with id of ${id} found`});
+  } catch (error) {
+    next(error);
+  }
 });
 
 module.exports = usersRouter;
