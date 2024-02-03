@@ -13,7 +13,7 @@ const getTokenFrom = (request) => {
 
 itemsRouter.get("/", async (request, response) => {
   try {
-    const items = await Item.find({}).populate("user");
+    const items = await Item.find({});
     response.json(items);
   } catch {
     console.error("Error", error);
@@ -24,7 +24,7 @@ itemsRouter.get("/", async (request, response) => {
 itemsRouter.get("/:id", async (request, response, next) => {
   try {
     const id = request.params.id;
-    const specificItem = await Item.findById(id).populate("user");
+    const specificItem = await Item.findById(id);
 
     if (specificItem) {
       response.json(specificItem);
